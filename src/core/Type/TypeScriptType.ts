@@ -17,10 +17,11 @@ export class TypeScriptType<O extends string, E extends string> extends BaseType
 
         name = this.desc.type.name;
         const generics = this.getGenerics(this.desc);
+        const isMap = this.desc.type.kind === introspector.TypeKind.Map;
 
         if (this.desc.type.kind === introspector.TypeKind.List) {
             name = "Array";
-        } else if (this.desc.type.kind === introspector.TypeKind.Map) {
+        } else if (isMap) {
             name = "Record";
         } else if (this.desc.type.kind === introspector.TypeKind.TypeParameter) {
             return name;
@@ -33,7 +34,7 @@ export class TypeScriptType<O extends string, E extends string> extends BaseType
         }
 
         if (generics.length) {
-            const line = generics.join();
+            const line = isMap ? `string,${generics[1]}` : generics.join();
             name = `${name}<${line}>`;
         }
 

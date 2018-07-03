@@ -118,7 +118,7 @@ export class GraphqlDefinition<
             type = `new graphql.GraphQLNonNull(${type})`;
         }
 
-        const result = `'${field.name}': {type: ${type}, description: "${field.comment}"},`;
+        const result = `'${field.name}': {type: ${type}, description: \`${field.comment}\`},`;
         lines.push(result);
     }
 
@@ -154,7 +154,7 @@ export class GraphqlDefinition<
         lines.push(`if (!cache[name]) {`);
         lines.push(`const c = {`);
         lines.push(`name,`);
-        lines.push(`description: "${comment}",`);
+        lines.push(`description: \`${comment}\`,`);
         lines.push(`fields: () => ({`);
 
         if (hasFields) {

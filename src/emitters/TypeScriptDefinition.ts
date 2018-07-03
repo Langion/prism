@@ -11,8 +11,13 @@ export class TypeScriptDefinition<
 > extends Emitter<O, E, Context> {
     protected fillHeadlines(headlines: string[], context: types.Context<O, E>) {
         super.fillHeadlines(headlines, context);
+        const source = this.prism.getFilePath(context.requestedFrom, false);
 
-        if (this.hasSharedSources()) {
+        const isThisShared = context.requestedFrom.origin === this.prism.config.shared.origin;
+        const isThisUnknown = context.requestedFrom.origin === this.prism.config.unknown.origin;
+        const shouldReExport = !isThisShared && !isThisUnknown;
+
+        if (shouldReExport && this.hasSharedSources()) {
             this.addSpace(headlines);
 
             const connection: types.Connection<O, E> = {
@@ -21,7 +26,21 @@ export class TypeScriptDefinition<
             };
 
             const sharePath = this.prism.getFilePath(connection, false);
-            headlines.push(`export * from '${sharePath}'`);
+            const relativeSharePath = utils.getRelativePath(source, sharePath);
+            headlines.push(`export * from '${relativeSharePath}'`);
+        }
+
+        if (shouldReExport && this.hasUnknownSources()) {
+            this.addSpace(headlines);
+
+            const connection: types.Connection<O, E> = {
+                emission: this.emission,
+                origin: this.prism.config.unknown.origin,
+            };
+
+            const unknownPath = this.prism.getFilePath(connection, false);
+            const relativeUnknownPath = utils.getRelativePath(source, unknownPath);
+            headlines.push(`export * from '${relativeUnknownPath}'`);
         }
     }
 

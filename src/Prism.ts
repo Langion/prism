@@ -15,7 +15,7 @@ export class Prism<O extends string, E extends string> {
         return result;
     }
 
-    public type = new Type<O, E>(this);
+    public type: Type<O, E> = new Type<O, E>(this);
     private files: Record<string, string[]> = {};
     private emitters: Array<Emitter<O, E, types.Context<O, E>>> = [];
 

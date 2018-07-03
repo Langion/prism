@@ -25,6 +25,11 @@ export abstract class Emitter<O extends string, E extends string, Context extend
         return result;
     }
 
+    protected hasUnknownSources() {
+        const result = _.some(this.introspections, (i) => i.origin === this.prism.config.unknown.origin);
+        return result;
+    }
+
     protected addSpace(lines: string[]) {
         const lastChar = _.last(lines);
 

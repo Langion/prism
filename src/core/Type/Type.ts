@@ -19,13 +19,13 @@ export class Type<O extends string, E extends string> {
     }
 
     private getAsGrapqhQL(desc: types.GraphQLTypeGetter<O, E>) {
-        const type = new GraphQLType<O, E>(desc, this);
+        const type: GraphQLType<O, E> = new GraphQLType<O, E>(desc, this);
         const result = type.get();
         return result;
     }
 
     private getAsTypeScript(desc: types.TypeScriptTypeGetter<O, E>) {
-        const type = new TypeScriptType<O, E>(desc, this);
+        const type: TypeScriptType<O, E> = new TypeScriptType<O, E>(desc, this);
         const result = type.get();
         return result;
     }

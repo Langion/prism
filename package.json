@@ -1,6 +1,6 @@
 {
   "name": "@langion/prism",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Emit Introspection",
   "homepage": "https://github.com/Langion/prism#readme",
   "bugs": {
@@ -22,16 +22,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@langion/apira": "1.0.0",
-    "@langion/introspector": "1.0.2",
+    "@langion/apira": "1.0.1",
+    "@langion/introspector": "1.0.3",
     "@types/mkdirp": "0.5.2",
-    "@types/prettier": "1.12.2",
+    "@types/prettier": "1.13.1",
     "mkdirp": "^0.5.1",
-    "prettier": "^1.12.1",
+    "prettier": "^1.13.7",
     "tslint": "^5.10.0"
   },
   "devDependencies": {
     "ts-lint": "^4.5.1",
-    "typescript": "^2.8.3"
+    "typescript": "^2.9.2"
   }
 }

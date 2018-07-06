@@ -60,13 +60,14 @@ export class TypeScriptDefinition<
         this.addSpace(lines);
         utils.fillMultilineComment(lines, enumeration);
 
-        lines.push(`export const enum ${enumeration.name}Enum {`);
+        lines.push(`export enum ${enumeration.name}Enum {`);
         _.forEach(enumeration.values, (v, k) => lines.push(`${k} = "${v}",`));
         lines.push(`}`);
 
         this.addSpace(lines);
-        const enumValues = _.map(enumeration.values, (v) => `"${v}"`).join("|");
-        lines.push(`export type ${enumeration.name} = ${enumValues};`);
+        const enumValues = _.map(enumeration.values, (v) => `"${v}"`);
+        const enumType = enumValues.length ? enumValues.join("|") : "string";
+        lines.push(`export type ${enumeration.name} = ${enumType};`);
 
         this.addSpace(lines);
     }

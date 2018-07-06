@@ -1,19 +1,19 @@
 {
   "name": "@langion/prism",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "Emit Introspection",
   "homepage": "https://github.com/Langion/prism#readme",
   "bugs": {
     "url": "https://github.com/Langion/prism/issues"
   },
-  "license": "MIT",
-  "author": "",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Langion/prism.git"
   },
+  "license": "MIT",
+  "author": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "tslint --project tsconfig.json",
@@ -22,7 +22,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@langion/apira": "1.0.1",
     "@langion/introspector": "1.0.4",
     "@types/mkdirp": "0.5.2",
     "@types/prettier": "1.13.1",
@@ -33,5 +32,8 @@
   "devDependencies": {
     "ts-lint": "^4.5.1",
     "typescript": "^2.9.2"
+  },
+  "peerDependencies": {
+    "@langion/apira": "^1.0.1"
   }
 }

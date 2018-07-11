@@ -61,11 +61,11 @@ export class TypeScriptDefinition<
         utils.fillMultilineComment(lines, enumeration);
 
         lines.push(`export enum ${enumeration.name}Enum {`);
-        _.forEach(enumeration.values, (v, k) => lines.push(`${k} = "${v}",`));
+        _.forEach(enumeration.values, (v) => lines.push(`${v.key} = "${this.escapeString(v.value)}",`));
         lines.push(`}`);
 
         this.addSpace(lines);
-        const enumValues = _.map(enumeration.values, (v) => `"${v}"`);
+        const enumValues = _.map(enumeration.values, (v) => `"${this.escapeString(v.value)}"`);
         const enumType = enumValues.length ? enumValues.join("|") : "string";
         lines.push(`export type ${enumeration.name} = ${enumType};`);
 
@@ -105,12 +105,22 @@ export class TypeScriptDefinition<
 
         utils.fillMultilineComment(lines, field);
 
-        const result = `"${field.name}":${type}`;
+        const result = field.isRequired ? `"${field.name}":${type}` : `"${field.name}"?:${type}`;
         lines.push(result);
 
         if (hasComment) {
             this.addSpace(lines);
         }
+    }
+
+    private escapeString(str: string) {
+        const result = str
+            .replace(/\\/g, "\\\\")
+            .replace(/\$/g, "\\$")
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '\\"');
+
+        return result;
     }
 
     private getName(interfaze: introspector.Interface<O>, requestedFrom: types.Connection<O, E>) {

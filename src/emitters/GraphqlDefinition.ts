@@ -46,7 +46,7 @@ export class GraphqlDefinition<
         if (_.isEmpty(enumeration.values)) {
             lines.push(`'empty': {value: 'empty'},`);
         } else {
-            _.forEach(enumeration.values, (v, k) => lines.push(`'${k}': {value: '${v}'},`));
+            _.forEach(enumeration.values, (v) => lines.push(`'${v.key}': {value: \`${v.value}\`},`));
         }
 
         lines.push(`}`);
@@ -114,7 +114,7 @@ export class GraphqlDefinition<
             emit: this.emit,
         });
 
-        if (!this.nullable) {
+        if (!this.nullable || field.isRequired) {
             type = `new graphql.GraphQLNonNull(${type})`;
         }
 

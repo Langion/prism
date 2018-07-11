@@ -304,10 +304,65 @@ export class Graphql<
             type = response[0];
         } else {
             type = `
-            new graphql.GraphQLUnionType({
-                name: '${method.name}${method.controller.name}Response',
-                types: [${response.join()}]
-              })
+            (function() {
+                const types = [${response.join()}];
+
+                return new graphql.GraphQLUnionType({
+                    name: '${method.name}${method.controller.name}Response',
+                    resolveType: (v, {}, i) => {
+                        let path: string[] = [];
+
+                        const updatePath = (part = i.path) => {
+                            path.push(part.key.toString());
+
+                            if (part.prev) {
+                                updatePath(part.prev);
+                            }
+                        };
+
+                        updatePath();
+                        path = path.reverse();
+
+                        const set = path.reduce(
+                            (a: graphql.SelectionSetNode, c: string) => {
+                                const node = a.selections.filter(s => 'name' in s && s.name.value == c);
+                                const result = node.pop()!;
+
+                                if ('selectionSet' in result) {
+                                    return result.selectionSet!;
+                                } else {
+                                    return a;
+                                }
+                            },
+
+                            i.operation.selectionSet
+                        );
+
+                        let type = types[0];
+
+                        set.selections.forEach(s => {
+                            if ('typeCondition' in s) {
+                                const names = s.selectionSet.selections
+                                    .map(sel => ('name' in sel ? sel.name.value : ''))
+                                    .filter(sel => !!sel);
+
+                                const hasAll = names.every(n => !!v[n]);
+
+                                if (hasAll) {
+                                    const result = types.find(t => t.name === s.typeCondition!.name.value);
+
+                                    if (result) {
+                                        type = result;
+                                    }
+                                }
+                            }
+                        });
+
+                        return type;
+                    },
+                    types
+                });
+            })()
             `;
         }
 
@@ -321,6 +376,7 @@ export class Graphql<
         const lines: string[] = [];
 
         lines.push(`${method.name}: {`);
+        lines.push(`description: \`Path: ${method.path}\\n${method.comment}\`,`);
         lines.push(`type: ${type}, `);
         lines.push(`args: ${args},`);
         lines.push("resolve: (source: any, args: any, c: any, info: any) =>");

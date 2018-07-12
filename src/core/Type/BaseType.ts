@@ -7,11 +7,11 @@ export class BaseType<O extends string, E extends string> {
     constructor(protected type: Type<O, E>) {}
 
     protected getGenerics(desc: types.TypeDesc<O, E>) {
-        const generics = _.map(desc.type.generics, (type) => {
+        const generics = _.map(desc.type.generics, (t) => {
             const genericData: types.TypeDesc<O, E> = {
                 ...desc,
-                type,
-                typeLocation: { origin: type.origin, emission: desc.typeLocation.emission },
+                type: t.type,
+                typeLocation: { origin: t.type.origin, emission: desc.typeLocation.emission },
             };
 
             const generic = this.type.get(genericData);

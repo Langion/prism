@@ -83,19 +83,14 @@ export class Prism<O extends string, E extends string> {
         return result;
     }
 
+    /**
+     * Enumerations should got last
+     */
     private sort() {
-        _.forEach(this.config.introspections, (i) => {
-            const controllers = _.sortBy(i.controllers, (c) => {
-                const methods = _.sortBy(c.methods, (m) => m.name);
-                c.methods = _.keyBy(methods, (m) => m.name);
-                return c.name;
-            });
-
-            const sources = _.sortBy(i.sources, (s) => s.shape.name);
-
-            i.controllers = _.keyBy(controllers, (c) => c.name);
-            i.sources = _.keyBy(sources, (s) => s.shape.name);
-        });
+        _.forEach(
+            this.config.introspections,
+            (i) => (i.sources = _.sortBy(i.sources, (s) => s.shape.kind === "Enumeration")),
+        );
     }
 
     private addEmit(createEmitter: (args: types.EmitArgs<O, E>) => Emitter<O, E, types.Context<O, E>>) {

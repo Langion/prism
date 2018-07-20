@@ -34,7 +34,7 @@ export class ApiraApi<
         lines.push(`export namespace ${controller.name} {`);
 
         const introspection: introspector.Introspection<O> = {
-            controllers: {},
+            controllers: [],
             origin: context.requestedFrom.origin,
             sources: controller.interplay,
         };

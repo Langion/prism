@@ -130,7 +130,7 @@ export class GraphqlDefinition<
         isDuplicate: boolean,
         origin: O,
         comment: string,
-        variables?: Record<string, string>,
+        variables?: string[],
     ) {
         const varTypesSignature = this.getVarTypes(variables, false);
         const varTypes = this.getVarTypes(variables, true);
@@ -168,7 +168,7 @@ export class GraphqlDefinition<
                 type: {
                     name: "Any",
                     comment: "",
-                    generics: {},
+                    generics: [],
                     isDuplicate: false,
                     kind: introspector.TypeKind.Entity,
                     origin: this.prism.config.unknown.origin,
@@ -192,7 +192,7 @@ export class GraphqlDefinition<
         lines.push(`})();`);
     }
 
-    private getVarTypes(variables?: Record<string, string>, addDefaultValue?: boolean) {
+    private getVarTypes(variables?: string[], addDefaultValue?: boolean) {
         const varTypes = _.map(variables, (v) => {
             let result = `${v}: graphql.GraphQLOutputType | graphql.GraphQLInputObjectType | null`;
 

@@ -59,7 +59,7 @@ export class GraphQLType<O extends string, E extends string> extends BaseType<O,
             name: "Any",
             origin: this.type.prism.config.unknown.origin,
             comment: "",
-            generics: {},
+            generics: [],
             isDuplicate: false,
             kind: introspector.TypeKind.Entity,
         };

@@ -118,7 +118,7 @@ export class Graphql<
                     typeLocation: { origin: c.origin, emission: this.emission },
                     type: {
                         comment: "",
-                        generics: {},
+                        generics: [],
                         kind: introspector.TypeKind.Entity,
                         name: c.name,
                         origin: c.origin,
@@ -142,7 +142,7 @@ export class Graphql<
 
         this.fillHeadlines(emit.headlines, {
             emit,
-            introspection: { controllers: {}, origin: requestedFrom.origin, sources: {} },
+            introspection: { controllers: [], origin: requestedFrom.origin, sources: [] },
             requestedFrom,
         });
 
@@ -207,7 +207,7 @@ export class Graphql<
         this.addSpace(lines);
 
         const introspection: introspector.Introspection<O> = {
-            controllers: {},
+            controllers: [],
             origin: requestedFrom.origin,
             sources: controller.interplay,
         };
@@ -288,7 +288,7 @@ export class Graphql<
             type: {
                 name: `${method.controller.name}.${method.name === "delete" ? "del" : method.name}`,
                 comment: "",
-                generics: {},
+                generics: [],
                 kind: introspector.TypeKind.Entity,
                 origin: requestedFrom.origin,
                 isDuplicate: false,
@@ -300,7 +300,23 @@ export class Graphql<
 
         let type = "";
 
-        if (response.length === 1) {
+        if (response.length === 0) {
+            const graphqlDefinition = this.prism.getEmitter(GraphqlDefinition);
+            type = this.prism.type.get({
+                kind: "TypeScript",
+                emit: this.emit,
+                requestedFrom,
+                typeLocation: { emission: graphqlDefinition.emission, origin: this.prism.config.unknown.origin },
+                type: {
+                    name: "Any",
+                    comment: "",
+                    generics: [],
+                    isDuplicate: false,
+                    kind: introspector.TypeKind.Entity,
+                    origin: this.prism.config.unknown.origin,
+                },
+            });
+        } else if (response.length === 1) {
             type = response[0];
         } else {
             type = `

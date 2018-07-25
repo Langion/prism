@@ -132,8 +132,8 @@ export class GraphqlDefinition<
         comment: string,
         variables?: string[],
     ) {
-        const varTypesSignature = this.getVarTypes(variables, false);
-        const varTypes = this.getVarTypes(variables, true);
+        const varTypesSignature = this.getVarTypes(variables, true);
+        const varTypes = this.getVarTypes(variables, false);
         const emitter = this.prism.getEmitter<Graphql<O, E, Context>>(Graphql);
 
         const variablesNames = _.map(variables, (v) => `\${${v}}`);
@@ -192,17 +192,9 @@ export class GraphqlDefinition<
         lines.push(`})();`);
     }
 
-    private getVarTypes(variables?: string[], addDefaultValue?: boolean) {
-        const varTypes = _.map(variables, (v) => {
-            let result = `${v}: graphql.GraphQLOutputType | graphql.GraphQLInputObjectType | null`;
-
-            if (addDefaultValue) {
-                result += " = null";
-            }
-
-            return result;
-        });
-
+    private getVarTypes(variables?: string[], isSignature?: boolean) {
+        const baseTypes = "graphql.GraphQLOutputType | graphql.GraphQLInputObjectType | null ";
+        const varTypes = _.map(variables, (v) => (isSignature ? `${v}?: ${baseTypes}` : `${v}: ${baseTypes} = null`));
         return varTypes;
     }
 

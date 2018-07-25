@@ -298,27 +298,25 @@ export class Graphql<
             typeLocation: { origin: requestedFrom.origin, emission: emitter.emission },
         });
 
-        let type = "";
+        const graphqlDefinition = this.prism.getEmitter(GraphqlDefinition);
+        let type = this.prism.type.get({
+            kind: "TypeScript",
+            emit: this.emit,
+            requestedFrom,
+            typeLocation: { emission: graphqlDefinition.emission, origin: this.prism.config.unknown.origin },
+            type: {
+                name: "Any",
+                comment: "",
+                generics: [],
+                isDuplicate: false,
+                kind: introspector.TypeKind.Entity,
+                origin: this.prism.config.unknown.origin,
+            },
+        });
 
-        if (response.length === 0) {
-            const graphqlDefinition = this.prism.getEmitter(GraphqlDefinition);
-            type = this.prism.type.get({
-                kind: "TypeScript",
-                emit: this.emit,
-                requestedFrom,
-                typeLocation: { emission: graphqlDefinition.emission, origin: this.prism.config.unknown.origin },
-                type: {
-                    name: "Any",
-                    comment: "",
-                    generics: [],
-                    isDuplicate: false,
-                    kind: introspector.TypeKind.Entity,
-                    origin: this.prism.config.unknown.origin,
-                },
-            });
-        } else if (response.length === 1) {
+        if (response.length === 1) {
             type = response[0];
-        } else {
+        } else if (response.length > 1) {
             type = `
             (function() {
                 const types = [${response.join()}];

@@ -111,7 +111,11 @@ export class Prism<O extends string, E extends string> {
             }
 
             const file = this.getFilePath(e, true);
-            const page = e.headlines.concat(e.lines);
+
+            let headlines = _.uniq(e.headlines);
+            headlines = _.sortBy(headlines);
+
+            const page = headlines.concat(e.lines);
             this.files[file] = page;
         });
     }

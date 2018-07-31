@@ -163,7 +163,7 @@ export class Graphql<
         const name = this.getQueryControllerName(controller);
         this.queryControllers.push({ name, origin: context.introspection.origin });
 
-        const result = this.createController(lines, name, controller, methods, context.requestedFrom);
+        const result = this.createController(lines, name, controller, methods, context.requestedFrom, context);
         return result;
     }
 
@@ -181,7 +181,7 @@ export class Graphql<
         const name = this.getMutationControllerName(controller);
         this.mutationControllers.push({ name, origin: context.introspection.origin });
 
-        const result = this.createController(lines, name, controller, methods, context.requestedFrom);
+        const result = this.createController(lines, name, controller, methods, context.requestedFrom, context);
         return result;
     }
 
@@ -199,6 +199,7 @@ export class Graphql<
         controller: introspector.Controller<O>,
         methods: Array<introspector.Method<O>>,
         requestedFrom: types.Connection<O, E>,
+        context: types.Context<O, E>,
     ) {
         const interplayName = this.getInterplayName(name);
 
@@ -229,7 +230,10 @@ export class Graphql<
 
         const models = definitions.create(this.emission);
 
-        _.forEach(models, (e) => this.mergeLines(lines, e.lines));
+        _.forEach(models, (e) => {
+            this.mergeLines(context.emit.headlines, e.headlines);
+            this.mergeLines(lines, e.lines);
+        });
 
         const gqlName = this.getNameForGql(name, false, controller.origin);
 

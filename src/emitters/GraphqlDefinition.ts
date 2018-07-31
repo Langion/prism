@@ -132,8 +132,8 @@ export class GraphqlDefinition<
         comment: string,
         variables?: string[],
     ) {
-        const varTypesSignature = this.getVarTypes(variables, true);
-        const varTypes = this.getVarTypes(variables, false);
+        const varTypesSignature = this.getVarTypes(origin, variables, true);
+        const varTypes = this.getVarTypes(origin, variables, false);
         const emitter = this.prism.getEmitter<Graphql<O, E, Context>>(Graphql);
 
         const variablesNames = _.map(variables, (v) => `\${${v}}`);
@@ -192,9 +192,29 @@ export class GraphqlDefinition<
         lines.push(`})();`);
     }
 
-    private getVarTypes(variables?: string[], isSignature?: boolean) {
+    private getVarTypes(origin: O, variables?: string[], isSignature?: boolean) {
         const baseTypes = "graphql.GraphQLOutputType | graphql.GraphQLInputObjectType | null ";
-        const varTypes = _.map(variables, (v) => (isSignature ? `${v}?: ${baseTypes}` : `${v}: ${baseTypes} = null`));
+
+        const anyType = this.prism.type.get({
+            kind: "TypeScript",
+            emit: this.emit,
+            requestedFrom: { emission: this.emission, origin },
+            typeLocation: { emission: this.emission, origin: this.prism.config.unknown.origin },
+            type: {
+                name: "Any",
+                comment: "",
+                generics: [],
+                isDuplicate: false,
+                kind: introspector.TypeKind.Entity,
+                origin: this.prism.config.unknown.origin,
+            },
+        });
+
+        const varTypes = _.map(
+            variables,
+            (v) => (isSignature ? `${v}?: ${baseTypes}` : `${v}: ${baseTypes} = ${anyType}`),
+        );
+
         return varTypes;
     }
 

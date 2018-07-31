@@ -50,7 +50,10 @@ export class ApiraApi<
 
         const models = model.create(this.emission);
 
-        _.forEach(models, (e) => this.mergeLines(lines, e.lines));
+        _.forEach(models, (e) => {
+            this.mergeLines(context.emit.headlines, e.headlines);
+            this.mergeLines(lines, e.lines);
+        });
 
         _.forEach(controller.methods, (m) => this.createMethod(lines, m, context.requestedFrom));
 

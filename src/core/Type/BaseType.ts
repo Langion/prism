@@ -37,8 +37,8 @@ export class BaseType<O extends string, E extends string> {
             };
 
             prefix = this.type.prism.getEmissionName(connection);
-            this.type.prism.getEmit(desc.emit, desc.requestedFrom);
-            desc.emit[desc.requestedFrom.origin].connections.push(connection);
+            const emit = this.type.prism.getEmit(desc.emit, desc.requestedFrom);
+            emit.connections.push(connection);
         }
 
         return prefix;

@@ -1,2 +1,2 @@
-# prism
-Emit Introspection
+# Prism
+Emit Introspections into files.

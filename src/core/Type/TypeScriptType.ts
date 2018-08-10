@@ -52,7 +52,7 @@ export class TypeScriptType<O extends string, E extends string> extends BaseType
             case introspector.TypeKind.String:
                 return "string";
             case introspector.TypeKind.Object:
-                return "{}";
+                return "{} | any";
             case introspector.TypeKind.Void:
                 return "void";
             default:

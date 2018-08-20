@@ -76,12 +76,14 @@ export class Graphql<
     private getGqlNames() {
         const names: string[] = [];
 
-        _.forEach(this.introspections, (i) =>
+        _.forEach(this.introspections, (i) => {
+            names.push(i.origin);
+
             _.forEach(i.controllers, (c) => {
                 names.push(this.getQueryControllerName(c));
                 names.push(this.getMutationControllerName(c));
-            }),
-        );
+            });
+        });
 
         return names;
     }

@@ -258,7 +258,7 @@ export class Graphql<
     private createMethod(method: introspector.Method<O>, requestedFrom: types.Connection<O, E>, interplayName: string) {
         const returns = _.toArray(method.response);
 
-        const filtered =
+        let filtered =
             returns.length > 1
                 ? returns.filter(
                       (r) =>
@@ -275,6 +275,25 @@ export class Graphql<
                 : returns;
 
         const definitionEmitter = this.prism.getEmitter(GraphqlDefinition);
+
+        if (filtered.length > 1) {
+            const withoutScalars: typeof filtered = [];
+
+            filtered.forEach((r) => {
+                if (r.kind === introspector.TypeKind.Entity) {
+                    withoutScalars.push(r);
+                } else {
+                    // tslint:disable-next-line:no-console
+                    console.log(
+                        `Cannot add Scalars to GraphQL response. Controller: "${method.controller.name}", Method: "${
+                            method.name
+                        }", Response: "${r.name}"`,
+                    );
+                }
+            });
+
+            filtered = withoutScalars;
+        }
 
         const response = filtered.map((r) =>
             this.prism.type.get({
@@ -323,12 +342,18 @@ export class Graphql<
         if (response.length === 1) {
             type = response[0];
         } else if (response.length > 1) {
+            const name = this.getNameForGql(
+                `${method.name}${method.controller.name}Response`,
+                false,
+                method.controller.origin,
+            );
+
             type = `
             (function() {
                 const types = [${response.join()}];
 
                 return new graphql.GraphQLUnionType({
-                    name: '${method.name}${method.controller.name}Response',
+                    name: '${name}',
                     resolveType: (v, {}, i) => {
                         let path: string[] = [];
 

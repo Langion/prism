@@ -389,11 +389,11 @@ export class Graphql<
                             if ('typeCondition' in s) {
                                 const names = s.selectionSet.selections
                                     .map(sel => ('name' in sel ? sel.name.value : ''))
-                                    .filter(sel => !!sel);
+                                    .filter(sel => !!sel && sel !== '__typename');
 
-                                const hasAll = names.every(n => !!v[n]);
+                                const hasField = names.some(n => !!v[n]);
 
-                                if (hasAll) {
+                                if (hasField) {
                                     const result = types.find(t => t.name === s.typeCondition!.name.value);
 
                                     if (result) {

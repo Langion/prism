@@ -49,8 +49,6 @@ export class Prism<O extends string, E extends string> {
 
         if (origin === this.config.unknown.origin) {
             name = this.config.unknown.name;
-        } else if (origin === this.config.shared.origin) {
-            name = this.config.shared.name;
         }
 
         const result = _.upperFirst(name);

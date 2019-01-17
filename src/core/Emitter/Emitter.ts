@@ -20,11 +20,6 @@ export abstract class Emitter<O extends string, E extends string, Context extend
         return this.emit;
     }
 
-    protected hasSharedSources() {
-        const result = _.some(this.introspections, (i) => i.origin === this.prism.config.shared.origin);
-        return result;
-    }
-
     protected hasUnknownSources() {
         const result = _.some(this.introspections, (i) => i.origin === this.prism.config.unknown.origin);
         return result;

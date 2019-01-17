@@ -36,6 +36,7 @@ export class ApiraApi<
         const introspection: introspector.Introspection<O> = {
             controllers: [],
             origin: context.requestedFrom.origin,
+            addedFrom: controller.addedFrom,
             sources: controller.interplay,
         };
 

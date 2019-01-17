@@ -4,6 +4,11 @@ import { Emitter } from "../core/Emitter";
 import { Prism } from "../Prism";
 import { Context } from "./Prism.types";
 
+export interface SideOrigin<O extends string> {
+    origin: O;
+    name: string;
+}
+
 export interface EmitArgs<O extends string, E extends string> {
     prism: Prism<O, E>;
     introspections: Record<O, introspector.Introspection<O>>;
@@ -23,8 +28,7 @@ export interface PrismConfig<O extends string, E extends string> {
     outFolderAbsolutePath: string;
     introspections: Record<O, introspector.Introspection<O>>;
     emitters: Array<(args: EmitArgs<O, E>) => Emitter<O, E, Context<O, E>>>;
-    unknown: introspector.SideOrigin<O>;
-    shared: introspector.SideOrigin<O>;
+    unknown: SideOrigin<O>;
     tslint: TSLintConfig;
     prettier?: prettier.Options;
 }

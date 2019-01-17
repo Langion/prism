@@ -26,7 +26,12 @@ export class GraphQLType<O extends string, E extends string> extends BaseType<O,
         const generics = this.getGenerics(this.desc);
 
         if (this.desc.type.kind === introspector.TypeKind.List) {
-            const line = generics.join();
+            let line = generics.join();
+
+            if (!line) {
+                line = this.getGqlAnyType();
+            }
+
             name = `new graphql.GraphQLList(${line})`;
             return name;
         } else if (this.desc.type.kind === introspector.TypeKind.Map) {

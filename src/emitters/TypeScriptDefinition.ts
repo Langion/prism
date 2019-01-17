@@ -9,28 +9,6 @@ export class TypeScriptDefinition<
     E extends string,
     Context extends types.Context<O, E> = types.Context<O, E>
 > extends Emitter<O, E, Context> {
-    protected fillHeadlines(headlines: string[], context: types.Context<O, E>) {
-        super.fillHeadlines(headlines, context);
-        const source = this.prism.getFilePath(context.requestedFrom, false);
-
-        const isThisShared = context.requestedFrom.origin === this.prism.config.shared.origin;
-        const isThisUnknown = context.requestedFrom.origin === this.prism.config.unknown.origin;
-        const shouldReExport = !isThisShared && !isThisUnknown;
-
-        if (shouldReExport && this.hasSharedSources()) {
-            this.addSpace(headlines);
-
-            const connection: types.Connection<O, E> = {
-                emission: this.emission,
-                origin: this.prism.config.shared.origin,
-            };
-
-            const sharePath = this.prism.getFilePath(connection, false);
-            const relativeSharePath = utils.getRelativePath(source, sharePath);
-            headlines.push(`export * from '${relativeSharePath}'`);
-        }
-    }
-
     protected fillIntrospection(lines: string[], context: types.Context<O, E>) {
         _.forEach(context.introspection.sources, (s) => this.fillSource(lines, s, context));
     }

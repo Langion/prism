@@ -37,11 +37,10 @@ export class Graphql<
         variablesNames: string[] = [],
     ) {
         const graphql = this.prism.getEmitter<Graphql<O, E, Context>>(Graphql);
-        const isShared = origin === this.prism.config.shared.name;
         let result = name;
         const isNameUsed = _.includes(graphql.names, result);
 
-        if (isNameUsed || (isDuplicate && !isShared)) {
+        if (isNameUsed || isDuplicate) {
             const originName = this.prism.getOriginName(origin);
             const newName = `${result}${originName}${gqlPostfix}`;
 
@@ -112,24 +111,26 @@ export class Graphql<
             lines.push(`name: '${serviceName}',`);
             lines.push(`fields: {`);
 
-            controllers.filter((c) => c.origin === i).forEach((c) => {
-                const type = this.prism.type.get({
-                    kind: "TypeScript",
-                    emit: this.emit,
-                    requestedFrom: { origin, emission: this.emission },
-                    typeLocation: { origin: c.origin, emission: this.emission },
-                    type: {
-                        comment: "",
-                        generics: [],
-                        kind: introspector.TypeKind.Entity,
-                        name: c.name,
-                        origin: c.origin,
-                        isDuplicate: false,
-                    },
-                });
+            controllers
+                .filter((c) => c.origin === i)
+                .forEach((c) => {
+                    const type = this.prism.type.get({
+                        kind: "TypeScript",
+                        emit: this.emit,
+                        requestedFrom: { origin, emission: this.emission },
+                        typeLocation: { origin: c.origin, emission: this.emission },
+                        type: {
+                            comment: "",
+                            generics: [],
+                            kind: introspector.TypeKind.Entity,
+                            name: c.name,
+                            origin: c.origin,
+                            isDuplicate: false,
+                        },
+                    });
 
-                lines.push(`${c.name}: {type: ${type}, resolve: () => ({})},`);
-            });
+                    lines.push(`${c.name}: {type: ${type}, resolve: () => ({})},`);
+                });
 
             lines.push("}");
             lines.push("}),");
@@ -144,7 +145,12 @@ export class Graphql<
 
         this.fillHeadlines(emit.headlines, {
             emit,
-            introspection: { controllers: [], origin: requestedFrom.origin, sources: [] },
+            introspection: {
+                controllers: [],
+                origin: requestedFrom.origin,
+                addedFrom: requestedFrom.origin,
+                sources: [],
+            },
             requestedFrom,
         });
 
@@ -212,6 +218,7 @@ export class Graphql<
         const introspection: introspector.Introspection<O> = {
             controllers: [],
             origin: requestedFrom.origin,
+            addedFrom: controller.addedFrom,
             sources: controller.interplay,
         };
 
@@ -419,9 +426,10 @@ export class Graphql<
 
     private createField(method: introspector.Method<O>, type: string, args: string, resolver: string) {
         const lines: string[] = [];
+        const path = method.path.replace(/\$/g, "\\$");
 
         lines.push(`${method.name}: {`);
-        lines.push(`description: \`Path: ${method.path}\\n${method.comment}\`,`);
+        lines.push(`description: \`Path: ${path}\\n${method.comment}\`,`);
         lines.push(`type: ${type}, `);
         lines.push(`args: ${args},`);
         lines.push("resolve: (source: any, args: any, c: any, info: any) =>");

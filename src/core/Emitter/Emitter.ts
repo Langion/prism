@@ -1,5 +1,6 @@
 import * as introspector from "@langion/introspector";
 import * as _ from "lodash";
+import * as path from "path";
 import { Prism } from "../../Prism";
 import * as types from "../../typings";
 import * as utils from "../../utils";
@@ -50,6 +51,18 @@ export abstract class Emitter<O extends string, E extends string, Context extend
         const connections = _.uniqWith(context.emit.connections, _.isEqual);
 
         _.forEach(connections, (c) => {
+            if ("path" in c) {
+                let exportPath = c.path;
+
+                if (path.isAbsolute(exportPath)) {
+                    exportPath = utils.getRelativePath(emitFolder, exportPath);
+                }
+
+                const line = `import ${c.import} from '${exportPath}';`;
+                imports.push(line);
+                return;
+            }
+
             const name = this.prism.getEmissionName(c);
             const importFolder = this.prism.getFilePath(c, false);
             const file = utils.getRelativePath(emitFolder, importFolder);

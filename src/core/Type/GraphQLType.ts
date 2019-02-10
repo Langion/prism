@@ -2,6 +2,7 @@ import * as introspector from "@langion/introspector";
 import * as _ from "lodash";
 import { GraphqlDefinition } from "../../emitters";
 import * as types from "../../typings";
+import { Reference } from "../../typings";
 import { BaseType } from "./BaseType";
 import { Type } from "./Type";
 
@@ -29,13 +30,13 @@ export class GraphQLType<O extends string, E extends string> extends BaseType<O,
             let line = generics.join();
 
             if (!line) {
-                line = this.getGqlAnyType();
+                line = this.getRawType();
             }
 
             name = `new graphql.GraphQLList(${line})`;
             return name;
         } else if (this.desc.type.kind === introspector.TypeKind.Map) {
-            return this.getGqlAnyType();
+            return this.getRawType();
         }
 
         const prefix = this.getAnotherFilePrefix(this.desc);
@@ -59,30 +60,18 @@ export class GraphQLType<O extends string, E extends string> extends BaseType<O,
         return name;
     }
 
-    public getGqlAnyType(): string {
-        const type: introspector.Type<O> = {
-            name: "Any",
-            origin: this.type.prism.config.unknown.origin,
-            comment: "",
-            generics: [],
-            isDuplicate: false,
-            kind: introspector.TypeKind.Entity,
+    public getRawType(): string {
+        const emitter = this.type.prism.getEmitter(GraphqlDefinition) as GraphqlDefinition<O, E, types.Context<O, E>>;
+
+        const reference: Reference = {
+            import: "{Raw}",
+            path: emitter.props.rawTypePath,
         };
 
-        const emitter = this.type.prism.getEmitter(GraphqlDefinition);
+        const emit = this.type.prism.getEmit(this.desc.emit, this.desc.requestedFrom);
+        emit.connections.push(reference);
 
-        const anyTypePath = this.type.get({
-            kind: "TypeScript",
-            type,
-            emit: this.desc.emit,
-            requestedFrom: this.desc.requestedFrom,
-            typeLocation: {
-                emission: emitter.emission,
-                origin: type.origin,
-            },
-        });
-
-        return anyTypePath;
+        return "Raw";
     }
 
     private mapType(kind: introspector.TypeKind) {
@@ -90,15 +79,15 @@ export class GraphQLType<O extends string, E extends string> extends BaseType<O,
             case introspector.TypeKind.Boolean:
                 return "graphql.GraphQLBoolean";
             case introspector.TypeKind.Date:
-                return this.getGqlAnyType();
+                return this.getRawType();
             case introspector.TypeKind.Number:
                 return "graphql.GraphQLFloat";
             case introspector.TypeKind.String:
                 return "graphql.GraphQLString";
             case introspector.TypeKind.Object:
-                return this.getGqlAnyType();
+                return this.getRawType();
             case introspector.TypeKind.Void:
-                return this.getGqlAnyType();
+                return this.getRawType();
             default:
                 return "";
         }

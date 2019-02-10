@@ -1,30 +1,41 @@
 import * as introspector from "@langion/introspector";
 import * as _ from "lodash";
-import { Graphql } from ".";
 import { Emitter } from "../core/Emitter";
 import * as types from "../typings";
+import { GraphqlAggregator } from "./";
+
+export interface GraphqlDefinitionProps {
+    rawTypePath: string;
+    gqlPostfix?: string;
+    nullable?: boolean;
+}
 
 export class GraphqlDefinition<
     O extends string,
     E extends string,
     Context extends types.Context<O, E> = types.Context<O, E>
 > extends Emitter<O, E, Context> {
-    constructor(emission: E, args: types.EmitArgs<O, E>, private gqlPostfix = "", private nullable = true) {
+    constructor(emission: E, args: types.EmitArgs<O, E>, public props: GraphqlDefinitionProps) {
         super(emission, args);
+
+        if (props.gqlPostfix === undefined) {
+            props.gqlPostfix = "";
+        }
+
+        if (props.nullable === undefined) {
+            props.nullable = true;
+        }
     }
 
     protected fillHeadlines(headlines: string[], context: types.Context<O, E>) {
+        context.emit.connections.push({ import: "{Raw}", path: this.props.rawTypePath });
         super.fillHeadlines(headlines, context);
         headlines.push(`import * as graphql from 'graphql'`);
-        this.addSpace(headlines);
     }
 
     protected fillIntrospection(lines: string[], context: types.Context<O, E>): void {
+        this.addSpace(lines);
         _.forEach(context.introspection.sources, (s) => this.fillSource(lines, s, context));
-
-        if (context.emit.origin === this.prism.config.unknown.origin) {
-            this.addAnyType();
-        }
     }
 
     private fillSource(lines: string[], source: introspector.Source<O>, context: types.Context<O, E>) {
@@ -36,8 +47,8 @@ export class GraphqlDefinition<
     }
 
     private fillEnumeration(lines: string[], enumeration: introspector.Enumeration, origin: O) {
-        const emitter = this.prism.getEmitter<Graphql<O, E, Context>>(Graphql);
-        const name = emitter.getNameForGql(enumeration.name, enumeration.isDuplicate, origin, this.gqlPostfix);
+        const emitter = this.prism.getEmitter<GraphqlAggregator<O, E, Context>>(GraphqlAggregator);
+        const name = emitter.getNameForGql(enumeration.name, enumeration.isDuplicate, origin, this.props.gqlPostfix);
 
         lines.push(`export const ${enumeration.name} = new graphql.GraphQLEnumType({`);
         lines.push(`name: '${name}',`);
@@ -64,6 +75,7 @@ export class GraphqlDefinition<
             _.forEach(interfaze.extends, (e) => this.fillExtends(lines, e, context.requestedFrom));
             _.forEach(interfaze.fields, (f) => this.fillField(lines, f, context.requestedFrom));
         };
+
         const hasFields = !_.isEmpty(interfaze.fields) || !_.isEmpty(interfaze.extends);
 
         this.fillDefinition(
@@ -114,7 +126,7 @@ export class GraphqlDefinition<
             emit: this.emit,
         });
 
-        if (!this.nullable || field.isRequired) {
+        if (!this.props.nullable || field.isRequired) {
             type = `new graphql.GraphQLNonNull(${type})`;
         }
 
@@ -134,10 +146,10 @@ export class GraphqlDefinition<
     ) {
         const varTypesSignature = this.getVarTypes(origin, variables, true);
         const varTypes = this.getVarTypes(origin, variables, false);
-        const emitter = this.prism.getEmitter<Graphql<O, E, Context>>(Graphql);
+        const emitter = this.prism.getEmitter<GraphqlAggregator<O, E, Context>>(GraphqlAggregator);
 
         const variablesNames = _.map(variables, (v) => `\${${v}}`);
-        const nameForGql = emitter.getNameForGql(name, isDuplicate, origin, this.gqlPostfix, variablesNames);
+        const nameForGql = emitter.getNameForGql(name, isDuplicate, origin, this.props.gqlPostfix, variablesNames);
 
         lines.push(`export const ${name} = (() => {`);
         lines.push(`const cache: Record<string, graphql.GraphQLObjectType | graphql.GraphQLInputObjectType> = {};`);
@@ -155,27 +167,13 @@ export class GraphqlDefinition<
         lines.push(`const c = {`);
         lines.push(`name,`);
         lines.push(`description: \`${comment}\`,`);
+        lines.push(`interfaces: [],`);
         lines.push(`fields: () => ({`);
+
+        lines.push(`raw: {type: Raw},`);
 
         if (hasFields) {
             fillFields();
-        } else {
-            const anyType = this.prism.type.get({
-                kind: "TypeScript",
-                emit: this.emit,
-                requestedFrom: { emission: this.emission, origin },
-                typeLocation: { emission: this.emission, origin: this.prism.config.unknown.origin },
-                type: {
-                    name: "Any",
-                    comment: "",
-                    generics: [],
-                    isDuplicate: false,
-                    kind: introspector.TypeKind.Entity,
-                    origin: this.prism.config.unknown.origin,
-                },
-            });
-
-            lines.push(`empty: {type: ${anyType}}`);
         }
 
         lines.push(`}),`);
@@ -187,71 +185,18 @@ export class GraphqlDefinition<
         lines.push(`}`);
         lines.push(`return cache[name];`);
         lines.push(`};`);
+
         lines.push(``);
+
         lines.push(`return ${name}`);
         lines.push(`})();`);
     }
 
-    private getVarTypes(origin: O, variables?: string[], isSignature?: boolean) {
-        const baseTypes = "graphql.GraphQLOutputType | graphql.GraphQLInputObjectType | null ";
+    private getVarTypes({}: O, variables?: string[], isSignature?: boolean) {
+        const baseTypes = "graphql.GraphQLOutputType | graphql.GraphQLInputObjectType | undefined";
 
-        const anyType = this.prism.type.get({
-            kind: "TypeScript",
-            emit: this.emit,
-            requestedFrom: { emission: this.emission, origin },
-            typeLocation: { emission: this.emission, origin: this.prism.config.unknown.origin },
-            type: {
-                name: "Any",
-                comment: "",
-                generics: [],
-                isDuplicate: false,
-                kind: introspector.TypeKind.Entity,
-                origin: this.prism.config.unknown.origin,
-            },
-        });
-
-        const varTypes = _.map(
-            variables,
-            (v) => (isSignature ? `${v}?: ${baseTypes}` : `${v}: ${baseTypes} = ${anyType}`),
-        );
+        const varTypes = _.map(variables, (v) => (isSignature ? `${v}?: ${baseTypes}` : `${v}: ${baseTypes} = Raw`));
 
         return varTypes;
-    }
-
-    private addAnyType() {
-        const emit = this.prism.getEmit(this.emit, {
-            emission: this.emission,
-            origin: this.prism.config.unknown.origin,
-        });
-
-        this.addSpace(emit.lines);
-        emit.lines.push(`export const Any = new graphql.GraphQLScalarType({`);
-        emit.lines.push(`name: 'Any',`);
-        emit.lines.push(`description: 'Любое значение которое не получилось сериализовать',`);
-        emit.lines.push(`serialize: v => v,`);
-        emit.lines.push(`parseValue: v => v,`);
-        emit.lines.push(`parseLiteral(ast) {`);
-        emit.lines.push(`switch (ast.kind) {`);
-        emit.lines.push(`case 'BooleanValue':`);
-        emit.lines.push(`return ast.value;`);
-        emit.lines.push(`case 'EnumValue':`);
-        emit.lines.push(`return ast.value;`);
-        emit.lines.push(`case 'FloatValue':`);
-        emit.lines.push(`return ast.value;`);
-        emit.lines.push(`case 'IntValue':`);
-        emit.lines.push(`return ast.value;`);
-        emit.lines.push(`case 'ListValue':`);
-        emit.lines.push(`return ast.values;`);
-        emit.lines.push(`case 'NullValue':`);
-        emit.lines.push(`return null;`);
-        emit.lines.push(`case 'ObjectValue':`);
-        emit.lines.push(`return ast.fields;`);
-        emit.lines.push(`case 'StringValue':`);
-        emit.lines.push(`return ast.value;`);
-        emit.lines.push(`case 'Variable':`);
-        emit.lines.push(`return ast.name;`);
-        emit.lines.push(`}`);
-        emit.lines.push(`},`);
-        emit.lines.push(`});`);
     }
 }

@@ -30,6 +30,7 @@ export class TypeScriptDefinition<
         lines.push(`}`);
 
         this.addSpace(lines);
+
         const enumValues = _.map(enumeration.values, (v) => `"${this.escapeString(v.value)}"`);
         const enumType = enumValues.length ? enumValues.join("|") : "string";
         lines.push(`export type ${enumeration.name} = ${enumType};`);

@@ -5,10 +5,15 @@ export interface Connection<O extends string, E extends string> {
     emission: E;
 }
 
+export interface Reference {
+    import: string;
+    path: string;
+}
+
 export interface Emit<O extends string, E extends string> extends Connection<O, E> {
     headlines: string[];
     lines: string[];
-    connections: Array<Connection<O, E>>;
+    connections: Array<Connection<O, E> | Reference>;
 }
 
 export interface TypeInfo<O extends string, E extends string> {

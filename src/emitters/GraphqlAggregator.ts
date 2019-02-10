@@ -10,7 +10,11 @@ export interface ControllersList<O extends string> {
     origin: O;
 }
 
-export class Graphql<
+export interface GraphqlAggregatorProps {
+    resolveTypePath: string;
+}
+
+export class GraphqlAggregator<
     O extends string,
     E extends string,
     Context extends types.Context<O, E> = types.Context<O, E>
@@ -19,6 +23,10 @@ export class Graphql<
     protected mutationControllers: Array<ControllersList<O>> = [];
 
     private names = this.getGqlNames();
+
+    constructor(emission: E, args: types.EmitArgs<O, E>, public props: GraphqlAggregatorProps) {
+        super(emission, args);
+    }
 
     public create() {
         const result = super.create();
@@ -36,7 +44,7 @@ export class Graphql<
         gqlPostfix = "",
         variablesNames: string[] = [],
     ) {
-        const graphql = this.prism.getEmitter<Graphql<O, E, Context>>(Graphql);
+        const graphql = this.prism.getEmitter<GraphqlAggregator<O, E, Context>>(GraphqlAggregator);
         let result = name;
         const isNameUsed = _.includes(graphql.names, result);
 
@@ -59,6 +67,7 @@ export class Graphql<
     }
 
     protected fillHeadlines(headlines: string[], context: types.Context<O, E>) {
+        context.emit.connections.push({ import: "{resolveType}", path: this.props.resolveTypePath });
         super.fillHeadlines(headlines, context);
         headlines.push(`import * as graphql from 'graphql'`);
     }
@@ -225,7 +234,7 @@ export class Graphql<
         const introspections = {} as Record<O, introspector.Introspection<O>>;
         introspections[requestedFrom.origin] = introspection;
 
-        const emitter = this.prism.getEmitter(GraphqlDefinition);
+        const emitter = this.prism.getEmitter(GraphqlDefinition) as GraphqlDefinition<O, E, types.Context<O, E>>;
 
         const definitions = new GraphqlDefinition<O, E>(
             emitter.emission,
@@ -233,8 +242,7 @@ export class Graphql<
                 prism: this.prism,
                 introspections,
             },
-            interplayName,
-            false,
+            { rawTypePath: emitter.props.rawTypePath, gqlPostfix: interplayName, nullable: false },
         );
 
         const models = definitions.create(this.emission);
@@ -330,21 +338,7 @@ export class Graphql<
             typeLocation: { origin: requestedFrom.origin, emission: emitter.emission },
         });
 
-        const graphqlDefinition = this.prism.getEmitter(GraphqlDefinition);
-        let type = this.prism.type.get({
-            kind: "TypeScript",
-            emit: this.emit,
-            requestedFrom,
-            typeLocation: { emission: graphqlDefinition.emission, origin: this.prism.config.unknown.origin },
-            type: {
-                name: "Any",
-                comment: "",
-                generics: [],
-                isDuplicate: false,
-                kind: introspector.TypeKind.Entity,
-                origin: this.prism.config.unknown.origin,
-            },
-        });
+        let type = "Raw";
 
         if (response.length === 1) {
             type = response[0];
@@ -356,6 +350,18 @@ export class Graphql<
             );
 
             type = `
+            (function() {
+                const types = [${response.join()}];
+
+                return new graphql.GraphQLUnionType({
+                    name: '${name}',
+                    resolveType: (v, c, i) => resolveType(v, c, i, types),
+                    types
+                });
+            })()
+            `;
+
+            /*   type = `
             (function() {
                 const types = [${response.join()}];
 
@@ -415,7 +421,7 @@ export class Graphql<
                     types
                 });
             })()
-            `;
+            `; */
         }
 
         const args = this.getArgs(method, requestedFrom, interplayName);

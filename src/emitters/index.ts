@@ -1,4 +1,4 @@
 export * from "./ApiraApi";
-export * from "./Graphql";
+export * from "./GraphqlAggregator";
 export * from "./GraphqlDefinition";
 export * from "./TypeScriptDefinition";

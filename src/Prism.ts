@@ -62,7 +62,7 @@ export class Prism<O extends string, E extends string> {
         return name;
     }
 
-    public getEmitter: <T extends Emitter<O, E, types.Context<O, E>>>(kind: typeof Emitter) => T = (kind) => {
+    public getEmitter<T extends Emitter<O, E, types.Context<O, E>>>(kind: new (...args: any[]) => T): T {
         const emitter = _.find(this.emitters, (e) => e instanceof kind);
 
         if (emitter) {

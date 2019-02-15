@@ -1,6 +1,6 @@
 {
     "name": "@langion/prism",
-    "version": "1.0.32",
+    "version": "1.0.34",
     "description": "Emit Introspection",
     "homepage": "https://github.com/Langion/prism#readme",
     "bugs": {

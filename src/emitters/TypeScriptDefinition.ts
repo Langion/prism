@@ -9,23 +9,48 @@ export class TypeScriptDefinition<
     E extends string,
     Context extends types.Context<O, E> = types.Context<O, E>
 > extends Emitter<O, E, Context> {
+    private enumNamesByOrigin = {} as Record<O, Record<string, number>>;
+
     protected fillIntrospection(lines: string[], context: types.Context<O, E>) {
         _.forEach(context.introspection.sources, (s) => this.fillSource(lines, s, context));
     }
 
     private fillSource(lines: string[], source: introspector.Source<O>, context: types.Context<O, E>) {
         if (source.shape.kind === "Enumeration") {
-            this.fillEnumeration(lines, source.shape);
+            this.fillEnumeration(lines, source.shape, context);
         } else {
             this.fillInterface(lines, source.shape, context);
         }
     }
 
-    private fillEnumeration(lines: string[], enumeration: introspector.Enumeration) {
+    private fillEnumeration(lines: string[], enumeration: introspector.Enumeration, context: types.Context<O, E>) {
+        if (!this.enumNamesByOrigin[context.emit.origin]) {
+            this.enumNamesByOrigin[context.emit.origin] = {};
+        }
+
+        const enumNames = this.enumNamesByOrigin[context.emit.origin];
+
         this.addSpace(lines);
         utils.fillMultilineComment(lines, enumeration);
 
-        lines.push(`export enum ${enumeration.name}Enum {`);
+        let asTypeName = enumeration.name;
+        let asEnumName = `${enumeration.name}Enum`;
+
+        if (enumNames[asTypeName] === undefined) {
+            enumNames[asTypeName] = 1;
+        } else {
+            enumNames[asTypeName]++;
+            asTypeName = `${asTypeName}_${enumNames[asTypeName]}`;
+        }
+
+        if (enumNames[asEnumName] === undefined) {
+            enumNames[asEnumName] = 1;
+        } else {
+            enumNames[asEnumName]++;
+            asEnumName = `${asEnumName}_${enumNames[asEnumName]}`;
+        }
+
+        lines.push(`export enum ${asEnumName} {`);
         _.forEach(enumeration.values, (v) => lines.push(`${v.key} = "${this.escapeString(v.value)}",`));
         lines.push(`}`);
 
@@ -33,7 +58,7 @@ export class TypeScriptDefinition<
 
         const enumValues = _.map(enumeration.values, (v) => `"${this.escapeString(v.value)}"`);
         const enumType = enumValues.length ? enumValues.join("|") : "string";
-        lines.push(`export type ${enumeration.name} = ${enumType};`);
+        lines.push(`export type ${asTypeName} = ${enumType};`);
 
         this.addSpace(lines);
     }

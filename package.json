@@ -1,6 +1,6 @@
 {
     "name": "@langion/prism",
-    "version": "1.0.34",
+    "version": "1.0.35",
     "description": "Emit Introspection",
     "homepage": "https://github.com/Langion/prism#readme",
     "bugs": {
@@ -23,22 +23,22 @@
     },
     "dependencies": {
         "@types/mkdirp": "0.5.2",
-        "@types/prettier": "1.15.2",
+        "@types/prettier": "1.18.3",
         "mkdirp": "^0.5.1",
-        "prettier": "^1.15.3",
-        "tslint": "^5.11.0"
+        "prettier": "^1.19.1",
+        "tslint": "^5.20.1"
     },
     "devDependencies": {
-        "@langion/introspector": "^1.0.38",
-        "@types/graphql": "^14.0.5",
-        "graphql": "^14.1.1",
-        "tslint": "^5.11.0",
-        "typescript": "^3.2.2"
+        "@langion/introspector": "^1.0.44",
+        "@types/graphql": "^14.5.0",
+        "graphql": "^14.5.8",
+        "tslint": "^5.20.1",
+        "typescript": "^3.7.2"
     },
     "peerDependencies": {
-        "@langion/apira": "^1.0.10",
-        "@langion/introspector": "^1.0.38",
-        "@types/graphql": "^14.0.5",
-        "graphql": "^14.1.1"
+        "@langion/apira": "^1.0.12",
+        "@langion/introspector": "^1.0.44",
+        "@types/graphql": "^14.5.0",
+        "graphql": "^14.5.8"
     }
 }

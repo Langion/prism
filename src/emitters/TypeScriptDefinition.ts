@@ -9,7 +9,7 @@ export class TypeScriptDefinition<
     E extends string,
     Context extends types.Context<O, E> = types.Context<O, E>
 > extends Emitter<O, E, Context> {
-    private enumNamesByOrigin = {} as Record<O, Record<string, number>>;
+    private enumNamesByOrigin = {} as Record<string, Record<string, number>>;
 
     protected fillIntrospection(lines: string[], context: types.Context<O, E>) {
         _.forEach(context.introspection.sources, (s) => this.fillSource(lines, s, context));

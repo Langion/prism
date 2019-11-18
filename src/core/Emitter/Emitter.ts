@@ -11,7 +11,7 @@ export abstract class Emitter<O extends string, E extends string, Context extend
     public introspections: Record<O, introspector.Introspection<O>>;
     protected emit = {} as Record<O, types.Emit<O, E>>;
 
-    constructor(public emission: E, args: types.EmitArgs<O, E>) {
+    constructor(public emission: E, private args: types.EmitArgs<O, E>) {
         this.prism = args.prism;
         this.introspections = args.introspections;
     }
@@ -39,6 +39,10 @@ export abstract class Emitter<O extends string, E extends string, Context extend
 
         this.fillIntrospection(context.emit.lines, context);
         this.fillHeadlines(context.emit.headlines, context);
+
+        if (this.args.transformEmit) {
+            this.args.transformEmit(context);
+        }
     }
 
     protected fillHeadlines(headlines: string[], context: types.Context<O, E>) {

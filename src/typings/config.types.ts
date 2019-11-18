@@ -12,6 +12,7 @@ export interface SideOrigin<O extends string> {
 export interface EmitArgs<O extends string, E extends string> {
     prism: Prism<O, E>;
     introspections: Record<O, introspector.Introspection<O>>;
+    transformEmit?: (context: Context<O, E>) => void;
 }
 
 export interface ApiraApiArgs<O extends string, E extends string> extends EmitArgs<O, E> {
